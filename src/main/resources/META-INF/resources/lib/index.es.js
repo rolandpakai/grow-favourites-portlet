@@ -150,7 +150,8 @@ class App extends React.Component {
 	organizeSlides() {
 		let i=0,index=0;
 		const growFavouritesSlides = []
-	
+		this.setState({growFavouritesSlides: []});
+
 		while(i< this.state.data.length){						
 
 			let dataSlide = this.state.data.filter(function(value, idx, Arr) {
@@ -171,10 +172,10 @@ class App extends React.Component {
 			i += CARDS_PER_COLUMN;
 			index++;
 		}
-		this.setState({
-			growFavouritesSlides : growFavouritesSlides,
+		this.setState(prevState => ({
+			growFavouritesSlides : [...prevState.growFavouritesSlides, growFavouritesSlides],
 			totalSlides: index
-		})
+		}));
 	}
 	
 	removeCardFromMyFavourites(data) {
@@ -194,7 +195,7 @@ class App extends React.Component {
 
 	}
 	
-	addCardToMyFavourites() {
+	addCardToMyFavourites(card) {
 		
 		setTimeout(() => {
 			
@@ -202,7 +203,7 @@ class App extends React.Component {
 			.then(
 				response => {
 					this.setState(prevState => ({
-						data: [...prevState.data, newCardMockupData]
+						data: [...prevState.data, card]
 					}));
 					this.organizeSlides();
 				}
@@ -272,7 +273,7 @@ class App extends React.Component {
 						
 							<GrowFavouritesPortletLeftPanel />
 							
-							<button type="button" onClick={this.addCardToMyFavourites}>
+							<button type="button" onClick={this.addCardToMyFavourites.bind(this,newCardMockupData)}>
 								Add to My Favourite
 							</button>
 							
