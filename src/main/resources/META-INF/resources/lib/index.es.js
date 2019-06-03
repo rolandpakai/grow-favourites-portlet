@@ -179,16 +179,19 @@ class App extends React.Component {
 	}
 	
 	removeCardFromMyFavourites(data) {
-		/*this.setState({ isRemovedFromMyFavourites: false });*/
-		
-		setTimeout(() => {
-			
-		axios.get(API + REMOVE_QUERY)
-			.then(
-				/*response => this.setState({ data: mockupData.data, isLoading: false })*/
-				console.log("isRemovedFromMyFavourites")
-			)
-			.catch(error => this.setState({ error}));
+		setTimeout(() => {			
+			axios.get(API + REMOVE_QUERY)
+				.then(
+					response => {
+						let newData = this.state.data.filter(card => card !== data);
+						this.setState({
+							data: newData,
+							isLoading: false
+						})
+						this.organizeSlides();
+					}
+				)
+				.catch(error => this.setState({ error}));
 			
 		}, 500);
 		
@@ -196,9 +199,7 @@ class App extends React.Component {
 	}
 	
 	addCardToMyFavourites(card) {
-		
 		setTimeout(() => {
-			
 		axios.get(API + ADD_QUERY)
 			.then(
 				response => {
@@ -213,7 +214,7 @@ class App extends React.Component {
 		}, 500);
 		
 	}
-	
+
 	componentDidMount() {
 		this.setState({ isLoading: true });
 		
@@ -232,11 +233,11 @@ class App extends React.Component {
 			
 		}, 500);
 	}
-	
+
 	render() {
-		
-		const { data, isLoading, error } = this.state;
-		
+
+		const {growFavouritesSlides, isLoading, error } = this.state;
+
 		if (error) {
 			 
 			return (
@@ -295,7 +296,7 @@ class App extends React.Component {
 									/>
 								</ButtonBack>
 								<Slider>
-									{this.state.growFavouritesSlides}
+									{growFavouritesSlides}
 								</Slider>		
 								<ButtonNext
 									className={"grow-favourites-carousel-button-next"}>
