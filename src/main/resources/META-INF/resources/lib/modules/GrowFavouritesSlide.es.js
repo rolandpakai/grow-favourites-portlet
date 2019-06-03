@@ -33,6 +33,7 @@ class GrowFavouritesSlide extends React.Component {
 							articleCategory={cardData.articleCategory}
 							star={cardData.star}
 							id={cardData.id}
+							cardData={cardData}
 						/>
 					</div>
 				</div>

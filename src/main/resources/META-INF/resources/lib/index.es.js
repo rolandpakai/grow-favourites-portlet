@@ -136,45 +136,85 @@ class App extends React.Component {
 		
 		this.state = {
 			data: [],
+			growFavouritesSlides: [],
+			totalSlides: 1,
 			isLoading: false,
 			error: null,
 		};
 		
+		this.organizeSlides = this.organizeSlides.bind(this);
 		this.removeCardFromMyFavourites = this.removeCardFromMyFavourites.bind(this);
 		this.addCardToMyFavourites = this.addCardToMyFavourites.bind(this);
 	}
 	
+	organizeSlides() {
+		let i=0,index=0;
+		const growFavouritesSlides = []
+		this.setState({growFavouritesSlides: []});
+
+		while(i< this.state.data.length){						
+
+			let dataSlide = this.state.data.filter(function(value, idx, Arr) {
+				return idx >= (0 + i) && idx < (CARDS_PER_COLUMN + i);
+			});
+
+			growFavouritesSlides.push(
+				<Slide index={index} key={index}>
+					<GrowFavouritesSlide
+						spritemap={SPRITEMAP}
+						data={dataSlide}
+						slideIndex={index}
+						handleStarClick={this.removeCardFromMyFavourites}
+					/>
+				</Slide>
+			);
+
+			i += CARDS_PER_COLUMN;
+			index++;
+		}
+		this.setState(prevState => ({
+			growFavouritesSlides : [...prevState.growFavouritesSlides, growFavouritesSlides],
+			totalSlides: index
+		}));
+	}
+	
 	removeCardFromMyFavourites(data) {
-		/*this.setState({ isRemovedFromMyFavourites: false });*/
-		
-		setTimeout(() => {
+		setTimeout(() => {			
+			axios.get(API + REMOVE_QUERY)
+				.then(
+					response => {
+						let newData = this.state.data.filter(card => card !== data);
+						this.setState({
+							data: newData,
+							isLoading: false
+						})
+						this.organizeSlides();
+					}
+				)
+				.catch(error => this.setState({ error}));
 			
-		axios.get(API + REMOVE_QUERY)
-			.then(
-				/*response => this.setState({ data: mockupData.data, isLoading: false })*/
-				console.log("isRemovedFromMyFavourites")
-			)
-			.catch(error => this.setState({ error}));
-			
-		}, 2000);
+		}, 500);
 		
 
 	}
 	
-	addCardToMyFavourites() {
-		
+	addCardToMyFavourites(card) {
 		setTimeout(() => {
-			
 		axios.get(API + ADD_QUERY)
 			.then(
-				response => this.setState({data: [newCardMockupData].concat(this.state.data)})
+				response => {
+					this.setState(prevState => ({
+						data: [...prevState.data, card]
+					}));
+					this.organizeSlides();
+				}
 			)
 			.catch(error => this.setState({ error}));
 			
-		}, 2000);
+		}, 500);
 		
 	}
-	
+
 	componentDidMount() {
 		this.setState({ isLoading: true });
 		
@@ -182,17 +222,22 @@ class App extends React.Component {
 			
 		axios.get(API + DEFAULT_QUERY)
 			.then(
-				response => this.setState({ data: mockupData.data, isLoading: false })
+				response => {
+					this.setState({ 
+						data: mockupData.data,
+						isLoading: false })
+					this.organizeSlides();
+				}
 			)
 			.catch(error => this.setState({ error, isLoading: false }));
 			
-		}, 2000);
+		}, 500);
 	}
-	
+
 	render() {
-		
-		const { data, isLoading, error } = this.state;
-		
+
+		const {growFavouritesSlides, isLoading, error } = this.state;
+
 		if (error) {
 			 
 			return (
@@ -221,31 +266,6 @@ class App extends React.Component {
 			)
 			
 		} else {
-			
-			let i=0,index=0;
-			const growFavouritesSlides = []
-			
-			while(i< data.length){						
-				
-				let dataSlide = data.filter(function(value, idx, Arr) {
-					return idx >= (0 + i) && idx < (CARDS_PER_COLUMN + i);
-				});
-				
-				growFavouritesSlides.push(
-					<Slide index={index} key={index}>
-						<GrowFavouritesSlide
-							spritemap={SPRITEMAP}
-							data={dataSlide}
-							slideIndex={index}
-							handleStarClick={this.removeCardFromMyFavourites}
-						/>
-					</Slide>
-				);
-				
-				i += CARDS_PER_COLUMN;
-				index++;
-			}
-
 			return (
 				<div className="grow-favourites-porltet">
 					<div className="container">
@@ -254,7 +274,7 @@ class App extends React.Component {
 						
 							<GrowFavouritesPortletLeftPanel />
 							
-							<button type="button" onClick={this.addCardToMyFavourites}>
+							<button type="button" onClick={this.addCardToMyFavourites.bind(this,newCardMockupData)}>
 								Add to My Favourite
 							</button>
 							
@@ -264,7 +284,7 @@ class App extends React.Component {
 							<CarouselProvider
 								naturalSlideWidth={400}
 								naturalSlideHeight={520}
-								totalSlides={index}
+								totalSlides={this.state.totalSlides}
 								visibleSlides={VISIBLE_SLIDES}
 							>
 								<ButtonBack
