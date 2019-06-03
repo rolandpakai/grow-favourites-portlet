@@ -136,12 +136,45 @@ class App extends React.Component {
 		
 		this.state = {
 			data: [],
+			growFavouritesSlides: [],
+			totalSlides: 1,
 			isLoading: false,
 			error: null,
 		};
 		
+		this.organizeSlides = this.organizeSlides.bind(this);
 		this.removeCardFromMyFavourites = this.removeCardFromMyFavourites.bind(this);
 		this.addCardToMyFavourites = this.addCardToMyFavourites.bind(this);
+	}
+	
+	organizeSlides() {
+		let i=0,index=0;
+		const growFavouritesSlides = []
+	
+		while(i< this.state.data.length){						
+
+			let dataSlide = this.state.data.filter(function(value, idx, Arr) {
+				return idx >= (0 + i) && idx < (CARDS_PER_COLUMN + i);
+			});
+
+			growFavouritesSlides.push(
+				<Slide index={index} key={index}>
+					<GrowFavouritesSlide
+						spritemap={SPRITEMAP}
+						data={dataSlide}
+						slideIndex={index}
+						handleStarClick={this.removeCardFromMyFavourites}
+					/>
+				</Slide>
+			);
+
+			i += CARDS_PER_COLUMN;
+			index++;
+		}
+		this.setState({
+			growFavouritesSlides : growFavouritesSlides,
+			totalSlides: index
+		})
 	}
 	
 	removeCardFromMyFavourites(data) {
@@ -156,7 +189,7 @@ class App extends React.Component {
 			)
 			.catch(error => this.setState({ error}));
 			
-		}, 2000);
+		}, 500);
 		
 
 	}
@@ -167,11 +200,16 @@ class App extends React.Component {
 			
 		axios.get(API + ADD_QUERY)
 			.then(
-				response => this.setState({data: [newCardMockupData].concat(this.state.data)})
+				response => {
+					this.setState(prevState => ({
+						data: [...prevState.data, newCardMockupData]
+					}));
+					this.organizeSlides();
+				}
 			)
 			.catch(error => this.setState({ error}));
 			
-		}, 2000);
+		}, 500);
 		
 	}
 	
@@ -182,11 +220,16 @@ class App extends React.Component {
 			
 		axios.get(API + DEFAULT_QUERY)
 			.then(
-				response => this.setState({ data: mockupData.data, isLoading: false })
+				response => {
+					this.setState({ 
+						data: mockupData.data,
+						isLoading: false })
+					this.organizeSlides();
+				}
 			)
 			.catch(error => this.setState({ error, isLoading: false }));
 			
-		}, 2000);
+		}, 500);
 	}
 	
 	render() {
@@ -221,31 +264,6 @@ class App extends React.Component {
 			)
 			
 		} else {
-			
-			let i=0,index=0;
-			const growFavouritesSlides = []
-			
-			while(i< data.length){						
-				
-				let dataSlide = data.filter(function(value, idx, Arr) {
-					return idx >= (0 + i) && idx < (CARDS_PER_COLUMN + i);
-				});
-				
-				growFavouritesSlides.push(
-					<Slide index={index} key={index}>
-						<GrowFavouritesSlide
-							spritemap={SPRITEMAP}
-							data={dataSlide}
-							slideIndex={index}
-							handleStarClick={this.removeCardFromMyFavourites}
-						/>
-					</Slide>
-				);
-				
-				i += CARDS_PER_COLUMN;
-				index++;
-			}
-
 			return (
 				<div className="grow-favourites-porltet">
 					<div className="container">
@@ -264,7 +282,7 @@ class App extends React.Component {
 							<CarouselProvider
 								naturalSlideWidth={400}
 								naturalSlideHeight={520}
-								totalSlides={index}
+								totalSlides={this.state.totalSlides}
 								visibleSlides={VISIBLE_SLIDES}
 							>
 								<ButtonBack
@@ -276,7 +294,7 @@ class App extends React.Component {
 									/>
 								</ButtonBack>
 								<Slider>
-									{growFavouritesSlides}
+									{this.state.growFavouritesSlides}
 								</Slider>		
 								<ButtonNext
 									className={"grow-favourites-carousel-button-next"}>
